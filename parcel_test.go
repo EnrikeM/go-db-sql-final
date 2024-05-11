@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bmizerany/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,10 +49,11 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	get, err := store.Get(got)
 	require.NoError(t, err)
-	require.Equal(t, get.Address, parcel.Address)
-	require.Equal(t, get.Client, parcel.Client)
-	require.Equal(t, get.CreatedAt, parcel.CreatedAt)
-	require.Equal(t, get.Status, parcel.Status)
+
+	id := get.Number
+
+	parcel.Number = id
+	assert.Equal(t, parcel, get)
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
@@ -59,7 +61,7 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = store.Get(got)
-	require.Error(t, err)
+	require.ErrorAs(t, err, sql.ErrNoRows.Error())
 
 }
 
@@ -163,7 +165,7 @@ func TestGetByClient(t *testing.T) {
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
-		require.Equal(t, parcel, parcelMap[parcel.Number])
+		assert.Equal(t, parcel, parcelMap[parcel.Number])
 		// убедитесь, что значения полей полученных посылок заполнены верно
 
 	}
